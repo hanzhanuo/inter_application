@@ -4,20 +4,50 @@
 
 namespace ghz{
 
-class Condition{
+class Condition
+ :public Noncopyable{   
+   //只要是涉及到系统资源的(就比如这里的互斥锁和条件变量均是涉及到系统资源的最基础轮子)
+   //这种既涉及到系统资源，又是最基础轮子的，才有必要继承Noncopyable，其他都没必要继承，因为其他都太上层所以不会是系统资源
+
+
 
    private:
     pthread_cond_t m_cond;
+    pthread_mutex_t& m_mutex;  
 
    public:
-   Condition();
-   //~Condition()=default;
-   ~Condition();
-   //这里的构造函数和析构函数是用来加锁和解锁的，这个一定不能忘了 
+   Condition(pthread_mutex_t& );//只要不是实现函数，就统统不需要写具体形参。这是以后写头文件的常用写法习惯  
+   /*
+   这里为什么只需要参数列表传参mutex，不需要传参条件变量？
+   原因就是这里的两个数据成员的身份不一样——————当是自家的内容的时候，就不需要传参
+   只有涉及到和别的模块之间产生联系的内容，才必须要通过初始化的形式进行传参
+   换句话说就是：别人家的东西要靠被人来维护，自己家的东西就靠自己维护
+   对上面的换句话的另一个经典案例就是：对于线程池中的线程容器和任务队列，都是不需要通过外界的内容进行初始化的
+   */
 
-   void wait(pthread_cond_t&,pthread_mutex_t&);
-   void notify_one(pthread_cond_t&);
-   void notify_all(pthread_cond_t&);
+
+
+   //~Condition()=default;
+    //这里的构造函数和析构函数是用来加锁和解锁的，这个一定不能忘了。
+    //所以这就是另一种典型的RAII思想，即只要有初始化和回收的操作，就一定要优先想到交给构造函数和析构函数干，尽可能少让他们吃干饭
+   ~Condition();
+  
+
+   // void wait(pthread_cond_t&,pthread_mutex_t&);
+   // void notify_one(pthread_cond_t&);
+   // void notify_all(pthread_cond_t&);
+   /*
+   这里和mutex的不需要设计参数是同一个原理，因为他们都像Qt中的思维一样，有全局变量(即数据成员)可用
+   并且这些确实应该是对数据成员进行的操作，如果不是对数据成员而是对于局部变量，那就和对于生产者消费者设置两个不同的缓冲区是同一种逻辑了
+   即对于c++这种造轮子基础类的封装切忌使用局部变量导致局部性，而是要
+   其实不仅仅是对于基础类，涉及到木偶模型的那种封装，也是必须要禁止传参数作为局部变量，而是对于数据成员的状态直接进行改变
+   所以在c++中传参数(最典型的就是对于构造函数传参数)，一定是从设计模式上不属于这个类的成员(即其他模块的内容)，才可能传参
+   或者说对于数据成员中没有的内容才需要传参，数据成员有的内容都是无脑使用数据成员
+   */
+
+   void wait();
+   void notify_one();
+   void notify_all();
 
    
 

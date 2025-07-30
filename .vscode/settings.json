@@ -106,7 +106,13 @@
     "string_view": "cpp",
     "initializer_list": "cpp",
     "ios": "cpp",
-    "stdexcept": "cpp"
+    "stdexcept": "cpp",
+    "chrono": "cpp",
+    "ctime": "cpp",
+    "ratio": "cpp",
+    "thread": "cpp",
+    "semaphore": "cpp",
+    "stop_token": "cpp"
   },
   "C_Cpp.errorSquiggles": "disabled"
 }

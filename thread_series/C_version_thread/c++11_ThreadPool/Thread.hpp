@@ -12,7 +12,8 @@ namespace ghz{
 
 
 //这个类是在封装线程库的时候就用到的类了，所以这里属于是复习一遍。但是复习一遍我发现完全忘干净了
-class Thread{   
+class Thread
+:public Noncopyable{   
 
     private:
     pthread_t m_thr_id;
@@ -29,7 +30,7 @@ class Thread{
     */
     ~Thread()=default;
     void start();
-    void join();
+    void* join();
     virtual void run()=0;
 
     static void* start_routine(void* arg);   
