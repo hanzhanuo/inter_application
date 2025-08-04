@@ -7,3 +7,5 @@
 #include <cstring>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+//#include <perror.h>   //没有这个头文件，peror实在stdio.h中的

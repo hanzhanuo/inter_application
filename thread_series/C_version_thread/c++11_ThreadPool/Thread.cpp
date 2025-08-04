@@ -27,13 +27,23 @@ namespace ghz{
         return ret;
     }
 
-    void Thread::run () override {
-        printf("thread's core code\n");
-        //写printf的时候一定不能忘了这个换行符，写了这么长时间了确实不应该忘了
-    }
+    //极其严重的错误!!!!
+    /*
+    和下面的p_this->run()一模一样，都是我原本理解为是多态了，所以才会对这个run进行重写
+    但其实这个问题我以前就遇到过——————thread是抽象类基类，并且刚刚在声明文件中写了run是纯虚函数
+    然后转头就在这个抽象类中写了run的实现，这实在是太蠢了
+    这种只要是抽象类中，基本上正常人就不会前脚设计为纯虚函数，后脚就实现了的这种做法
+    所以对于这种做法必须要格外格外注意
+    */
+
+    //所以这里的重写是错误的
+    // void Thread::run () override {
+    //     printf("thread's core code\n");
+    //     //写printf的时候一定不能忘了这个换行符，写了这么长时间了确实不应该忘了
+    // }
 
     void* Thread::start_routine(void* arg){
-        Thread* thread=static_cast<Thread*> arg;
+        Thread* p_this=static_cast<Thread*> arg;
         /*
         这里涉及到两点感悟：
         1.对于入口函数，一定一定要切记：入口函数的第一步就是对于参数进行强转
@@ -41,8 +51,13 @@ namespace ghz{
         3.对于c++使用的是static_cast,一定不要像C语言直接强转了
         */
 
-        thread->run();
-        //之所以不得不使用这个this指针，是因为涉及到了多态，这里的this指针就表示该积累的指针
+        p_this->run();
+        /*
+        之所以不得不使用这个this指针，
+        所以这里根本不是在多态，而是单纯是在进行this指针的调用而已
+        所以这种写法非常容易被误会为进行多态了
+        */
+
         
         
         //return nullptr;  //入口函数的书写习惯一定要改，改为写exit

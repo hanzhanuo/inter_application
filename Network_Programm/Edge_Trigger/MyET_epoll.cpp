@@ -77,7 +77,7 @@ int main(int argc,char** argv){
 
     ev.events=EPOLLIN|EPOLLET;   //这里就是最最核心的———————对于是读事件还是写事件进行添加
 
-    ret=epoll_ctl(epoll_fd,EPOLL_CTL_ADD,listen_fd,&ev)
+    ret=epoll_ctl(epoll_fd,EPOLL_CTL_ADD,listen_fd,&ev);
     //第三个参数表达的是：(就比如这次是进行添加操作)进行添加监听的是listen_fd,所以本次想要进行操作的是哪个fd，就将哪个fd填到第三个参数中
     //因为在这个函数中第三个参数是最灵活的参数。所以后面进行操作的时候，基本上要改的就是第三个参数
 
@@ -145,7 +145,7 @@ int main(int argc,char** argv){
                 //这里是直接对于ev结构体进行复用即可————————所以意味着结构体也是可以复用的，不仅仅只有变量可以用来复用
                 //这里的结构体复用，以及每个监听的内容全局范围值只需要添加一次就可以了。
                 //上面这两个操作组合起来，就是epoll相比于select来说，最重要的优点
-                ev.data.fd=netfd;
+                ev.data.fd=net_fd;
                 ev.events=EPOLLIN|EPOLLET;
                 epoll_ctl(epoll_fd,EPOLL_CTL_ADD,net_fd,&ev);
                 

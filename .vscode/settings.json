@@ -112,7 +112,20 @@
     "ratio": "cpp",
     "thread": "cpp",
     "semaphore": "cpp",
-    "stop_token": "cpp"
+    "stop_token": "cpp",
+    "set": "cpp",
+    "map": "cpp",
+    "cstring": "cpp",
+    "buffer": "cpp",
+    "executor": "cpp",
+    "socket": "cpp",
+    "future": "cpp",
+    "forward_list": "cpp",
+    "io_context": "cpp",
+    "condition_variable": "cpp",
+    "list": "cpp",
+    "netfwd": "cpp",
+    "mutex": "cpp"
   },
   "C_Cpp.errorSquiggles": "disabled"
 }

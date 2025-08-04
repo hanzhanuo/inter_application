@@ -2,6 +2,10 @@
 #include <stdlib.h>
 #include <asm-generic/socket.h>  //看来这个是epoll专属的头文件了，普通的server中没有使用这个头文件
 #include <sys/epoll.h>
+#include <stdio.h>    //标准输入，输出，错误，基于的都是标准输入输出的头文件
+#include <cstring>    //memset必须使用的头文件，所以它和string的使用场景是不同的
+#include <unistd.h>
+#include <errno.h>
 
 
 //这些进行连接的代码都是直接写在main函数中的，要进行和纯server的步骤的区分
@@ -80,7 +84,7 @@ int main(int argc,char** argv){
 
     ev.events=EPOLLIN;   //这里就是最最核心的———————对于是读事件还是写事件进行添加
 
-    ret=epoll_ctl(epoll_fd,EPOLL_CTL_ADD,listen_fd,&ev)
+    ret=epoll_ctl(epoll_fd,EPOLL_CTL_ADD,listen_fd,&ev);
     //第三个参数表达的是：(就比如这次是进行添加操作)进行添加监听的是listen_fd,所以本次想要进行操作的是哪个fd，就将哪个fd填到第三个参数中
     //因为在这个函数中第三个参数是最灵活的参数。所以后面进行操作的时候，基本上要改的就是第三个参数
 
@@ -164,7 +168,7 @@ int main(int argc,char** argv){
                 //尤其常见于while(1)和if-else相配合的问题中
 
                 //这里是直接对于ev结构体进行复用即可————————所以意味着结构体也是可以复用的，不仅仅只有变量可以用来复用
-                ev.data.fd=netfd;
+                ev.data.fd=net_fd;
                 ev.events=EPOLLIN;
                 epoll_ctl(epoll_fd,EPOLL_CTL_ADD,net_fd,&ev);
                 //再次重申一遍：这里虽然ev结构体中已经有net_fd了，但是由于epoll_ctl是基于红黑树实现的，所以第三个参数传入的必要性是作为key用于有序排序使用

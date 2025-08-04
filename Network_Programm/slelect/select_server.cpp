@@ -1,8 +1,12 @@
 #include "func.h"
 #include <asm-generic/socket.h>
 #include <cstdlib>
+#include <sys/socket.h>  //只要是使用网络编程，就也要包含这个库，所以这是我func.h的有一个疏漏
 #include <sys/epoll.h>
-#include <unistd.h>   
+#include <sys/select.h>   
+//我光想着epoll需要头文件了，忘了select也需要同样的头文件了，所以这里的错误实在是太基础了。。。,重新迭代我的func.h 
+#include <unistd.h> 
+    
 
 
 int main(int argc,char** argv){
@@ -16,7 +20,8 @@ int main(int argc,char** argv){
 
     //设置addr可以复用
     int on=1;   //on只有=1才是开启了，=0就是地址复用关闭了
-    setsocketopt(listen_fd,SOL_SOCKET,SO_REUSEADDR,&on,sizeof(on));
+    setsockopt(listen_fd,SOL_SOCKET,SO_REUSEADDR,&on,sizeof(on));
+    //这里我原本写错了——————一定要记住是setsockopt，而不是setsocketopt
 
     struct sockaddr_in server_addr;
     memset(&server_addr,0,sizeof(server_addr));   //每次结构体完了我都会忘记这个memset操作，对这个
@@ -29,7 +34,7 @@ int main(int argc,char** argv){
     并且只可能使用到s，不可能使用到long了
     */
 
-    ret=bind(listen_fd,(struct sockaddr*)&server_addr,sizeof(server_addr));
+    int ret=bind(listen_fd,(struct sockaddr*)&server_addr,sizeof(server_addr));
     /*
     所以bind函数的参数列表和memset的参数列表非常非常像，通过memset来助记想起来这个函数的参数应该怎么填
     所以整个网络编程就是一个大型的通过一个内容助记另一个内容的整体连贯下来的默写操作
@@ -97,7 +102,7 @@ int main(int argc,char** argv){
         //所以这里的为分机准备完整资源，就是一个细节的知识点问题。这就是对于细节知识点进行深刻理解的意义
         struct sockaddr_in cilent_addr;  //为分机准备的，专门用来存储新接收的客户端的具体地址的
         //这个接收具体地址和epoll的epoll_event结构体是一模一样的原理，都是用来承接基本信息的
-        socklen_t addr_len=sizeof(cilentaddr);
+        socklen_t addr_len=sizeof(cilent_addr);
         int net_fd=accept(listen_fd,&cilent_addr,&addr_len);
 
         if(net_fd<0){   //这里就像socket直接创建实例一样，只要是fd，就都需要进行<0的错误判断
