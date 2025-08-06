@@ -1,4 +1,5 @@
 #include "EventLoop.hpp"
+#include <sys/eventfd.h>
 
 namespace apion{
 
@@ -133,6 +134,86 @@ namespace apion{
             }
         }
     }
+
+
+    //只有在写头文件的时候，才需要进行："每个模块需要写在一起"这样的设计，在实现文件中随便写即可
+    int EventLoop::createEventfd(){
+        int fd=eventfd(0,0);   //第一个参数是初始化计数器的值，第二个参数作为标志位必须写为0
+        
+        /*
+        这里写为fd，而不是event_fd,还是因为函数封装的思想
+        因为外部只需要用一个event_fd来承接就可以了，函数内部写什么名是不需要体面的
+        所以这种对于封装的内部无需体面的思想我见识过很多次了，但是始终没有变成我的思想
+        */
+        
+        if(fd<0){
+            perror("eventfd");
+            return -1;
+        }
+
+        return fd;
+    }   
+
+    void EventLoop::handleReadEvent(){   //进行read操作
+        uint64_t howmany=0;   
+        //这个howmany是必须要有的，是一个buf，用于承接计数器中此次读出来的计数器的值是多少
+        //在这里这个buf的值是用来查看是否是每次都传一次读一次的，避免造成传多次读一次，从而造成通信的信息丢失
+        //通信的收发次数问题，是本地的线程间通信中，最最重要的课题，所以每次都需要先条件反射的思考有没有可能这种情况，从而提升代码的健壮性
+        int ret=read(m_eventfd,&howmany,sizeof(howmany));
+        printf("the read count is %1d\n",howmany);
+        if(ret!=sizeof(howmany)){
+            perror("read");
+        }
+    }   
+    void EventLoop::do_wakeup(){  //write操作，通过写操作使得内核计数器+1
+        uint64_t write_count=1;
+        int ret=write(m_eventfd,&write_count,sizeof(write_count));
+        if(ret!=sizeof(write_count)){
+            perror("write");
+        }
+    }   
+    void EventLoop::do_PendingFunctors(){  //对vector的内容进行处理的操作
+        printf("doPendingFuntor");
+
+        /*
+        这里的处理思路是使用一个tmp进行处理操作，然后让原本的vector继续进行接收内容的操作
+        所以其实这里从解决方法的思想上来看，是和select的解决方法是一模一样的
+        那么这种解决方法一般都是面对什么问题提出的呢？
+        答：是根据一些读写冲突——————主要是只需要写实时写操作修改某个大型内容的时候(尤其是对于容器的时候)
+        */
+
+        std::vector<Functor> tmp;
+        /*
+        tmp=   
+        注意：对于vector的拷贝操作使用的是等号不假，但是这里进行的是交换操作
+        ——————即把pending的vector搬空，然后让这个被搬空的再去读
+        所以这种搬空法和select的同步法还是有细微差距的，这个差距和规律无关，和具体的业务逻辑场景有关
+        不同的业务逻辑场景对于vector的处理方法会有策略上的不同
+        */
+    
+    
+    {   //为了尽可能缩减智能锁的粒度，以及对别的内容的锁住的影响，所以这里写为语句块的形式
+        //语句块能实现——————出了这个语句块，锁的生命周期就立马结束了
+
+    MutexLockGuard autolock(m_mutex);
+        /*
+        所以这里又是——————既涉及到了之前总结的完全解耦，所以必须要传入具体是对哪个mutex进行的智能锁升级
+        又涉及到了这种智能锁的生命周期最好最好是局部函数这种作用域的，最好不要是全局作用域的，否则就违反了RAII了
+
+        */
+       tmp.swap(m_PendingFunctor);
+    
+    }   //end of 语句块    所以以后每个智能锁都要直接放在语句块中
+
+
+    for(auto& functor:tmp){
+        functor();
+    }
+        
+    }   
+    void EventLoop::run_inLoop(Functor&& cb){  //对于vector进行插入的操作
+
+    }   
 
 
 }

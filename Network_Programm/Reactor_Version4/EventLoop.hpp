@@ -3,12 +3,13 @@
 
 
 #include "func.h"
-#include <sys/epoll.h>   //切记只有这个eventloop类需要这个库函数，所以它才没被严选到func.h中
+#include "Mutex.hpp"
 #include "TCPConnection.hpp"
 #include <vector>
 #include <unordered_map>
 #include <memory>   //智能指针
 #include <functional>   //基本上都是回调函数才使用这个库进行砸坑操作
+#include <sys/epoll.h>   //切记只有这个eventloop类需要这个库函数，所以它才没被严选到func.h中
 
 namespace apion{
 
@@ -55,6 +56,8 @@ using TCPConnectionCallBack=std::function<void(TCPConnectionPtr)>;
 使用function基本上可以直接定性了——————一定是使用的是回调函数
 */
 
+
+using Functor=std::function<void()>;   //专门给eventfd的相关绑定所使用的using
 
 
 class EventLoop{
@@ -166,8 +169,42 @@ class EventLoop{
       */
       
 
-      //
- 
+      
+
+
+      
+
+      //eventfd的模块：
+      public:
+      void run_inLoop(Functor&& cb);   //所有右值引用传的一定是cb，即右值引用一定是和回调函数始终在一起使用的
+      private:
+      /*
+      我总算明白为什么一些非常复杂的类需要反复写多个public和private了
+      原因就是这样每一个模块的内容放入了这个类中，就可以集中把这个模块的所有内容放在一个位置了
+      */
+
+      int m_eventfd;   //所以这里的这些相关模块和数据成员全部都放在一起，这样还可以方便助记，能立刻想起来需要写什么
+      vector<Functor> m_PendingFunctor;
+      Mutex m_mutex;
+
+      //分析每个函数的含义以及其两两对应的关系
+      int createEventfd();   //只要是fd的create函数，就必定是返回值为int，这个每次写诶次都错，真是不应该错...
+      //所以以后每次看到create函数，就一定是返回值为int
+
+      void handleReadEvent();   //进行read操作
+      void do_wakeup();   //write操作，通过写操作使得内核计数器+1
+      void do_PendingFunctors();  //对send的数组进行执行的操作
+      //run_in函数是对这个send数组进行插入操作
+
+      /*
+      所以现在总结出来了：这里的取名取得不好，五个函数中除了创建fd的函数外，剩下四个函数两两对应
+      所以应该在取名的时候取为两两对应的名字,这样助记，这四个函数就能一下记下来写在一起了
+      */
+
+
+
+      //end of eventfd模块
+
 };
 
 }  //namespace apion

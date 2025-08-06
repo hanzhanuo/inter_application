@@ -10,6 +10,7 @@
 
 #include "ThreadPool.hpp"
 
+
 #include <string>
 #include <functional>
 
@@ -27,6 +28,15 @@ using TCPConnectionCallBack=function<void()>;
 这里好像没必要写——————原因是这种using都是全局的，只要是引用了头文件，就不需要对全局的内容进行重写
 所以同理：这里之所以老师没有对string这些头文件进行包含，就是因为
 */
+
+
+using std::string;    
+/*
+注意所有的using(无论是用来重命名的还是用来声明std的)
+都是无脑写在namespace紧跟着的位置的
+这里我写这个std::string,是因为我发现这个我用到的极其频繁，所以只要是用到的频繁的std内容，就一定要using，不要一个一个std
+*/
+
 
 
 class TCPServer{
@@ -91,6 +101,103 @@ class TCPServer{
 //所以这是一种极致的类和对象思维——————不让任何一个内容掉队，一定要让所有的内容都作为类和对象的一部分
 
 
+
+class MyTasks{       
+    /*
+    这里的mytasks就是线程池的mytasks，这里写的process就是执行的业务主逻辑，所以此时原本用来执行业务主逻辑的onMessage函数就用来执行线程池了
+    即mytask抢了onMessage，但是由于onMessage是最终执行的最大的部分，所以这里process把他的工作分走了，他当然要执行更宏大的操作了————————即执行启动线程池的操作
+    */
+
+    /*
+    并且这里执行的是最终的效果是：process把计算线程所做的任务给封装起来了，但是在调用的时候还是在onMssage函数中调用
+    所以就是onMessage最终从结果上看，还是执行了五步(因为执行5步是必须的，这里的思想仅仅是对于计算和IO进行解耦，而并不是两者不能同时被调用了)
+    而且一定要切记：这里的计算线程被解耦就是这里的process这个萝卜坑中做的事情，所以这个确实和线程池一样，属于是各种各样的业务逻辑，
+    ——————所以也可以看出来：线程池这种东西天生是用来处理具体业务逻辑的，而不是用来处理网络IO的(即这里的IO指的是网络IO，而不是本地IO)
+    因此以后只要有设计到计算线程(即处理IO以外的各种五彩缤纷的业务逻辑)，就毫不犹豫选择BO线程池即可
+    ——————BO的线程池方法是开闭原则最强的，比之前推崇的设计为onMessage更强(因为这里就是对onMessage的萝卜坑思想进行一步更极致的优化)
+    
+
+    注意点1：解耦并不是不调用，而是分开封装，然后对每个封装进行调用。所以原本在最终位置需要调用什么函数，在修改升级后，需要调用的一个也不能少
+            只不过调用的形式变了，从而很容易看起来没有调用，但其实一步步调试会发现都封装起来了
+
+    注意点2：IO线程是指的网络IO，即read(收)和send(发)。但是由于这两个操作中间被三步挡住了，
+            所以这两步是不可能封装起来的，只能实现不在那三步的封装里执行————————这种中间有内容的解耦，最多就只能解耦到这个地步了
+            ———————即没法把这些步封装起来，就把除了它们以外的所有步都封装起来，这样就能实现对于他们反向视为封装了
+
+    */
+    
+
+    private:
+    
+    TCPConnectionPtr m_conn;   //具体是对于那个TCP链接？这条是mytask必须要有的
+    const std::string& m_msg;  
+    /*
+    这个和业务逻辑直接相关，这回发过去的是一个string，下回其他业务场景的业务逻辑发过去的就可能是一个int
+    所以可以说整个Reactor模型中，只有这里的业务逻辑是最多变的，其他代码全都是照搬即可，没什么需要根据业务场景进行大修大改的位置
+    所以这里的process这个业务逻辑函数:一般都是需要传入传出参数的
+    */
+    
+    
+
+
+    public:
+
+    MyTasks(TCPConnectionPtr conn,const std::string& msg)
+    :m_conn(conn)
+    ,m_msg(msg)
+    {
+        /*
+        这里限制了TCP作为MyTasks的数据成员，但是我认为这不是束缚，相反这是一种"乘法效果"
+        ——————即原本只能实现某个链接中实现不同的业务逻辑，现在就可以实现每个链接都可以实现许多不同的业务逻辑——————所以我才说这是乘法效果
+        所以这里很容易混淆一个概念：只要是这个类中的这些process，那就是不管是被什么TCP链接限制住的对象，都是可以使用这些所有的process成员函数的
+        是可选择并且全部都可用的——————千万不要想成是TCP链接限制住了只可以使用哪些process了
+        */
+    }
+
+    void process1(){   //作为回调函数，一定要设计为返回值是void的，因为bind只能修改参数，不能修改返回值
+        //decode 
+        //comupt
+        //encode
+
+        std::string response=m_msg+"1";   //假设这个就是经过上面的业务逻辑所得到的结果
+        
+        m_conn->send(response);     //我故意把send函数写在计算线程里了
+        /*
+        因为这里是V3,所以我刻意写成了这种：把send没有解耦出去，依旧写在这个计算线程中的IO行为
+        V3为什么没有解耦出去？原因是计算线程的三步卡在了IO线程的两步中间，找顺序执行的代码逻辑，肯定是没法把第一第五步封装起来的
+        但是后面V4引入了eventfd这种线程间通信的机制，从而使得把原本的直接send，通过操作强行扭成了先本地的线程间通信，然后再让IO线程专门用于进行网络IO操作
+        所以这里就是强行拧巴为了：把原本一个本地线程就能实现的内容，拆分托管给了两个本地线程才能执行的过程
+        而这种拧巴不会带来性能上的提升(相反由于线程间通信，所以性能下降了)，但是让程序员后续维护代码的时候更好维护了
+        所以可以看出来：可维护性远远远大于一点点的性能损耗
+        
+
+        并且这里还需要注意一个点：IO线程和计算线程只不过是人脑中的逻辑结构，而不是在代码中实实在在体现的
+        其体现的是：把网络流程中的通识性的必要流程抽象出来了两大类，这两大类步骤被归纳为了：进行业务计算的步骤，还有进行网络IO的步骤
+        所以这里的执着于解耦，就是因为它并不是代码体现的所谓的线程，而是人脑抽象出的所有步骤按功能划分可以分为几大类
+        */
+    }
+
+
+    void process2(){
+
+        //decode
+        //compute
+        //encode
+
+
+        std::string response=m_msg+"2";
+
+        m_conn->send(response);
+        //我有一次写为直接send了，一定一定要小心这里，非常容易写错
+
+    }
+
+
+};
+
+//V5的最终产物(也可以说是V5的唯一产物)
+//所以难怪我一开始比较费解为什么和老师教案中V4的onMseeage写法不一样，原来是因为这里其实是V5的内容了
+//所以这里对照着老师的教案看的时候，一定要小心，这里对照着看很容易疑惑
 class WORKSever{   //表示用于处理具体业务逻辑的业务逻辑类，所以在横向中，最最右侧(即最上层)的封装了
     private:
     Threadpool m_threadpool;
@@ -98,7 +205,9 @@ class WORKSever{   //表示用于处理具体业务逻辑的业务逻辑类，�
 
 
     public:
-    WORKSever(){
+    WORKSever(int threadNum,int queSize,unsigned short port,const std::string& ip="0.0.0.0")
+    :m_threadpool(threadNum,queSize)
+    ,m_TCPsev(port,ip){    //我这里犯的错误实在太蠢了——————我把
 
     }
 
@@ -120,7 +229,7 @@ class WORKSever{   //表示用于处理具体业务逻辑的业务逻辑类，�
     */
 
 
-    void onConnection(wd::TcpConnectionPtr conn)
+    void onConnection(TCPConnectionPtr conn)
     {
         cout << conn->toString() << " has connected successfully.\n";
     } 
@@ -137,7 +246,7 @@ class WORKSever{   //表示用于处理具体业务逻辑的业务逻辑类，�
     那么这里用于分离的操作，是那个pendingfunctor，
     然后还要注意由于高度解耦，所以lockguard类需要使用mutex类作为构造函数参数列表来使用
     */
-    void onMessage(wd::TcpConnectionPtr conn)
+    void onMessage(TCPConnectionPtr conn)
     {
         //onMessage函数是执行在IO线程中的
         //在执行该函数对象的过程中，时间都不宜过长，
@@ -152,21 +261,30 @@ class WORKSever{   //表示用于处理具体业务逻辑的业务逻辑类，�
         //encode    //否则都会造成并发处理不能保证实时性
         //由于业务逻辑的处理过程是很复杂的，那么就可以将其交给
         //计算线程来执行具体的处理流程
-        Mytask task(msg, conn);
-        _threadpool.addTask(std::bind(&Mytask::process, task));
+        MyTasks task(conn,msg);
+        _threadpool.addTask(std::bind(&MyTasks::process1, task));
         //当计算线程处理完毕之后，再交给IO线程进行发送
         
+
+        /*
+        在V4版本中，总算把对最后一步send的操作进行分离的问题给解决了
+        所以这里体现的是：所谓的对IO线程解耦，其实就是对第一步和最后一步进行反向的丢弃
+        所以这种反向丢弃的操作，就是对于不是顺序执行的步骤的最优解耦方式
+        */
+
         //假设执行的回显服务
         string response = msg;
-
         //send
         conn->send(response);//时间不宜过长
+
+        
+        
     }
 
-    void onClose(apion::TcpConnectionPtr conn)
+    void onClose(TCPConnectionPtr conn)
     {
         cout << conn->toString() << " has closed." << endl;
-        //这种内容totring，我确实没想到——————主要是没想到这个是个什么内容，是不是什么内容都可以toString实现
+        //tostring函数是自定义函数，所以我之前一直以为是string的库函数了，我实在太蠢了
     }
 
 };

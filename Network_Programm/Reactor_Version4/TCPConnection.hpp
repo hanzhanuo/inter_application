@@ -56,6 +56,12 @@ TCPConnectionCallBack m_doClose;
   ~TCPConnection()=default;
 
   void send(const std::string& msg);
+  void send_inLoop(const std::string& msg);   
+  /*
+  因为这个函数是对于send函数的转发调用，所以自然要求参数列表也必须一模一样了
+  所以只要是转发调用，就像之前的对于组合的理解一样——————必须对参数列表负责，所以就必须承接封装者的参数列表
+  */
+
   std::string recv();    //这里明显又是重名函数，所以直接进行使用匿名命名空间即可
 
   void Shutdown();   //用于关闭整个服务器端的链接

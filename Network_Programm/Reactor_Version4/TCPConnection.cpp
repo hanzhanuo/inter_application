@@ -9,6 +9,18 @@ namespace apion{
 
   }
 
+  void TCPConnection::send_inLoop(const std::string& msg){
+
+    /*
+    所以从函数体可以看出来：这个不是纯粹的对于send的封装，而是send_in是对run_in的封装
+    然后run_in再进行的对于send的填坑
+    所以这层关系一定一定要记住，我总是记为是send_in是直接对于send的调用了，这种记法当然是错的
+    */
+    if(m_loop) {
+        m_loop->run_inLoop(std::bind(&TcpConnection::send, this, msg));
+    }
+  }
+
   std::string TCPConnection::recv(){
 
   }  
