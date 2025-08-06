@@ -20,6 +20,8 @@ TCPConnection类是所有类的枢纽(即可以说所有进行封装的类都是
 #include <string>
 #include <memory>
 
+#include <functional>
+
 namespace apion{
 
 class TCPConnection;
