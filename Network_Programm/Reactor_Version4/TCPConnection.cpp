@@ -17,7 +17,7 @@ namespace apion{
     所以这层关系一定一定要记住，我总是记为是send_in是直接对于send的调用了，这种记法当然是错的
     */
     if(m_loop) {
-        m_loop->run_inLoop(std::bind(&TcpConnection::send, this, msg));
+        m_loop->run_inLoop(std::bind(&TCPConnection::send, this, msg));
     }
   }
 
