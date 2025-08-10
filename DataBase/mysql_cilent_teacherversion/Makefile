@@ -5,7 +5,7 @@ CC:=g++
 FLAGS:=-g -w
 
 $(BIN):$(OBJS)
-	$(CC) -o $@ $^ $(FLAGS)
+	$(CC) -o $@ $^ $(FLAGS) -lmysqlclient
 %.o:%.cpp
 	$(CC) -c $^ -o $@ $(FLAGS)
 
