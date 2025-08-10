@@ -1,4 +1,4 @@
-#include "mysql_cilent.hpp"
+#include "mysql_cilent_teacher.hpp"
 #include <iostream>
 #include <mysql/mysql.h>
 
@@ -6,11 +6,16 @@
 using std::cout;
 using std::endl;
 
-namespace apion
+namespace wd
 {
 
 MySQLClient::MySQLClient()
 {
+
+    /*
+    以后写代码都
+    */
+    
     MYSQL * pconn = mysql_init(&_conn);
     if(!pconn) {
         cout << "mysqlclient init error" << endl;
@@ -23,11 +28,11 @@ MySQLClient::~MySQLClient()
 }
 
 
-bool MySQLClient::connect(const string & host,
-             unsigned short port,
+bool MySQLClient::connect(const string & host,             
              const string & user,
              const string & passwd,
-             const string & db)
+             const string & db,
+            unsigned short port)
 {
     MYSQL * pconn = mysql_real_connect(&_conn,
                                        host.c_str(),
@@ -62,6 +67,8 @@ vector<vector<string>> MySQLClient::readOperationQuery(const string & sql)
 {
     cout << "1111" << endl;
     int ret = mysql_real_query(&_conn, sql.c_str(), sql.size());
+    
+    //如果是错误的情况，就直接返回一个临时对象
     if(ret != 0) {
         printf("(%d, %s)\n", mysql_errno(&_conn), mysql_error(&_conn));
         return vector<vector<string>>();
@@ -74,6 +81,9 @@ vector<vector<string>> MySQLClient::readOperationQuery(const string & sql)
         printf("(%d, %s)\n", mysql_errno(&_conn), mysql_error(&_conn));
         return vector<vector<string>>();
     }
+    //上面是没有结果集的错误判断
+
+
     //有结果集的情况
     int rows = mysql_num_rows(res);
     if(rows == 0) {

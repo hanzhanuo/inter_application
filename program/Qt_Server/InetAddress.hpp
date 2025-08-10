@@ -1,7 +1,7 @@
 #ifndef __InetAddress_H__
 #define __InetAddress_H__
 
-#include <func.h>
+#include "func.h"
 
 #include <string>
 using std::string;
