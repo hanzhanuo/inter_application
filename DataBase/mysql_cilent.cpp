@@ -2,6 +2,8 @@
 
 namespace apion{
 
+    #if 0
+    //这个构造函数的写法是错的：因为在构造函数中不能直接调用库函数，原因也不是临时变量的原因，而是就不能调用
     MySQLClient::MySQLClient(MYSQL conn)
     :m_conn(conn)
     ,mp_conn(mysql_init(&m_conn))
@@ -11,6 +13,7 @@ namespace apion{
     {
 
     }
+    #endif
 
     MySQLClient::~MySQLClient(){
         mysql_close(mp_conn);

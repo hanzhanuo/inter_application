@@ -6,7 +6,7 @@
 
 
 
-namespace wd
+namespace group_6
 {
 
 
@@ -44,7 +44,7 @@ private:
     EventLoop   _loop;
 };
 
-}//end of namespace wd
+}//end of namespace group_6
 
 
 #endif

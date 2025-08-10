@@ -27,7 +27,10 @@ class MySQLClient{
 
     public:
 
-    MySQLClient(MYSQL conn);
+    //MySQLClient(MYSQL conn);    
+    //由于没法直接在构造函数中调用其他库的库函数，因此就没必要在构造函数中进行传入参数的操作了
+
+    MySQLClient();
     ~MySQLClient();   
     //我明白为什么不需要断开链接的成员函数了——————因为一定要有这种RAII的思想
     //看到这种善后操作，就一定要立刻想到析构函数。我之前对于善后和析构函数的关系还是思考的太浅了

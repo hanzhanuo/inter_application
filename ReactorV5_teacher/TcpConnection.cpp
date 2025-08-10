@@ -3,7 +3,7 @@
 #include <sstream>
 
 
-namespace wd
+namespace group_6
 {
 
 
@@ -110,4 +110,4 @@ InetAddress TcpConnection::getPeerAddress()
     }
     return InetAddress(addr);
 }
-}//end of namespace wd
+}//end of namespace group_6

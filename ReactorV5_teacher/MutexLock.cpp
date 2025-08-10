@@ -1,14 +1,10 @@
 #include "MutexLock.hpp" //实现文件中第一个要对应的是自定义头文件
-#include <pthread.h>
-
-//#include <stdio.h>
-//#include <iostream>
-
-//using std::cout;
-//using std::endl;
 
 
-namespace wd
+
+
+
+namespace group_6
 {
 
 MutexLock::MutexLock()
@@ -31,4 +27,4 @@ void MutexLock::unlock()
     pthread_mutex_unlock(&_mutex);
 }
 
-}//end of namespace wd
+}//end of namespace group_6

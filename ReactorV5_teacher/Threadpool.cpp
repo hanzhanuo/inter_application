@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 
-namespace wd
+namespace group_6
 {
 
 Threadpool::Threadpool(int threadNum, int queSize)
@@ -81,6 +81,6 @@ void Threadpool::doTask()
 }
 
 
-}// end of namespace wd
+}// end of namespace group_6
 
 

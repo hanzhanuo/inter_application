@@ -9,7 +9,7 @@
 using std::shared_ptr;
 using std::function;
 
-namespace wd
+namespace group_6
 {
 
 class EventLoop;
@@ -66,7 +66,7 @@ private:
 };
 
 
-}//end of namespace wd
+}//end of namespace group_6
 
 
 #endif

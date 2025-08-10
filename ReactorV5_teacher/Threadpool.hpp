@@ -11,7 +11,7 @@
 using std::vector;
 using std::unique_ptr;
 
-namespace wd
+namespace group_6
 {
 
 
@@ -37,7 +37,7 @@ private:
     bool                        _isExit;
 };
 
-}//end of namespace wd
+}//end of namespace group_6
 
 #endif
 
