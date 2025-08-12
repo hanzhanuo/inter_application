@@ -1,14 +1,7 @@
 #ifndef __MysqlCilent_H__
 #define __MysqlCilent_H__
 
-#include <stdio.h>
-#include <cstdlib>
-#include <stdlib.h>
-#include <string.h>
-#include <mysql/mysql.h>  //mysql的客户端头文件
-#include <string>
-#include <string.h>
-#include <vector>
+#include "func.h"
 
 namespace apion{
 
@@ -23,6 +16,13 @@ class MySQLClient{
 
    MYSQL m_conn;
    MYSQL * mp_conn;
+    /*
+    由于每次进行承接的p_conn都是进行新的赋值，而不是需要一直使用同一个指针
+    即每次承接和错误判断，都申请一个新的就指针就可以了，没必要把它变成影响类的大小的数据成员
+    所以数据成员能少尽可能少添加，否则会增加每个对象实例的内存开销
+    这里就是每次的p_conn都是用来承接并判断的，所以设计为局部的完全可以
+    所以以后要对于这些只进行承接的内容尽可能设计为局部变量
+    */
    MYSQL_RES * m_res;
 
     public:

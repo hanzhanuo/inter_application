@@ -2,6 +2,7 @@
 #define __Task_H__
 
 #include <functional>
+#include <iostream>
 
 using std::endl;
 using std::cout;

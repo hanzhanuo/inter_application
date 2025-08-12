@@ -14,14 +14,12 @@ MySQLClient::MySQLClient()
 {
 
     /*
-    这里由于是每次的pconn都是用来承接内容，而不是用来进行计算处理的
-    因而只要不是需要用来进行计算处理的变量，就都不需要设计为全局变量，自然就不需要设计为数据成员了
+    以后写代码都
     */
-
-
+    
     MYSQL * pconn = mysql_init(&_conn);
     if(!pconn) {
-        DEBUG_LOG("mysqlclient init error");
+        cout << "mysqlclient init error" << endl;
     }
 }
 

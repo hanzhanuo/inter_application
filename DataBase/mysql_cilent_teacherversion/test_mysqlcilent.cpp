@@ -2,6 +2,8 @@
 
 using std::string;
 
+
+
 int main(int argc,char** argv){
 
     const string& host = "localhost";
@@ -13,10 +15,16 @@ int main(int argc,char** argv){
 
     MYSQL conn;
 
-    wd::MySQLClient mysqlClient;
+    ghz::MySQLClient mysqlClient;
     mysqlClient.connect(host, user, passwd, db,port);
 
-    mysqlClient.readOperationQuery("SELECT * FROM student");
+
+    string sql_command = "SELECT * FROM student";
+    mysqlClient.readOperationQuery(sql_command);
+
+
+    vector<vector<string>> res = mysqlClient.readOperationQuery(sql_command);
+    ghz::MySQLClient::dump(res); 
 
     return 0;
 }
