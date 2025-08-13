@@ -29,7 +29,7 @@ using Connect=function<void()>;  // 连接的类型定义
 class ConnPoll{
     private:        
         int                         _connectNum;
-        vector<unique_ptr<MYSQL>>  _connects;  
+        vector<unique_ptr<MySQLClient>>  _connects;  
         //vector中存的不是智能指针。现在的逻辑应该是让一个个链接后返回的MYSQl类型的智能指针进入这个vector中
         int                         _queSize;
         CommandQueue                _commandque;

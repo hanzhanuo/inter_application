@@ -15,7 +15,7 @@ namespace ghz{
         for(int i=0;i<_connectNum;++i)
         {
             
-            _connects.emplace_back(std::make_unique<Connect>());
+            _connects.emplace_back(std::make_unique<MySQLClient>());
         }
     }
 
@@ -25,9 +25,10 @@ namespace ghz{
     
     void ConnPoll::start()
     {
-        for(auto & conn : _connects)
+        for(int i=0;i<_connectNum;++i)
         {
-            conn->start();
+            
+            _connects.emplace_back(std::make_unique<MySQLClient>());
         }
     }
 

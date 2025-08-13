@@ -39,8 +39,8 @@ namespace ghz{
         //所以这个函数既可以进行读操作，又可以进行写操作，是通用成员函数
         
         //进行每块的内容进行处理的操作
-        void processChunk(char* mapped_data, size_t start, size_t end, std::mutex& mtx); 
-        
+        void processReadVideo(char* mapped_data, size_t start, size_t end, std::mutex& mtx);
+        void processWriteVideo(char* mapped_data, size_t start, size_t end, std::mutex& mtx);
 
         //在这里可以添加目录操作，减少对于文件的读写操作
         //比如可以根据日期进行目录的组织

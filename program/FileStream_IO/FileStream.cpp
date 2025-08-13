@@ -82,18 +82,50 @@ bool FileStream::file_list_directory(const string& dir, vector<string>& files){
 }
 
 
+//进行读录像的代码逻辑
+void FileStream::processReadVideo(char* mapped_data, size_t start, size_t end, std::mutex& mtx) {
 
-void FileStream::processChunk(char* mapped_data, size_t start, size_t end, std::mutex& mtx) {
-    // 加锁保证输出顺序（非必须，仅演示线程安全）
-    std::lock_guard<std::mutex> lock(mtx);
     std::cout << "线程 " << std::this_thread::get_id()    //如何在linux中获取线程id？是不是我需要设计一个函数来实现获取
               << " 处理范围: [" << start << ", " << end << ")" << std::endl;
+
+
+    std::lock_guard<std::mutex> lock(mtx);
+    //对于同一个文件的同一部分，必须进行加锁进行操作，用于避免多个线程同时读写文件中的同一个部分
+    但是到时候不使用这个锁，使用的是自己封装的锁
+
 
     // 处理映射区域的数据（无需加锁，因各线程访问独立区域）
     for (size_t i = start; i < end; ++i) {
         mapped_data[i] = toupper(mapped_data[i]); // 示例：转大写
     }
-}
+
+}    //end of 读录像的process
+
+
+
+//然后在后面还要写：对于写录像，读阿里云文件，写阿里云文件的几大代码逻辑
+//然后需要重点思考锁
+
+//对于写录像的代码逻辑
+void FileStream::processWriteVideo(char* mapped_data, size_t start, size_t end, std::mutex& mtx) {
+
+    std::cout << "线程 " << std::this_thread::get_id()
+              << " 处理范围: [" << start << ", " << end << ")" << std::endl;
+
+    std::lock_guard<std::mutex> lock(mtx);
+    //对于同一个文件的同一部分，必须进行加锁进行操作，用于避免多个线程同时读写文件中的同一个部分
+    但是到时候不使用这个锁，使用的是自己封装的锁
+
+
+    // 处理映射区域的数据（无需加锁，因各线程访问独立区域）
+    for (size_t i = start; i < end; ++i) {
+        mapped_data[i] = tolower(mapped_data[i]); // 示例：转小写
+    }
+
+}    //end of 写录像的process
+
+
+
 
 
 //这里如果设置为萝卜坑，那所有调用这个函数的都需要设置一个萝卜坑参数了
@@ -118,7 +150,8 @@ int FileStream::handle_chunk(size_t chunk_size,int method){
     void* addr=mmap(nullptr,file_size,PROT_READ,MAP_PRIVATE,_file_fd,0);
 
     if(addr == MAP_FAILED){
-        perror("mmap");
+        perror("mmap");  //也是类似于日志输出，不过这个日志是特定输出到stderr文件中的
+        LOG(ERROR,"映射出错");
         return -1;
     }
 
@@ -137,16 +170,28 @@ int FileStream::handle_chunk(size_t chunk_size,int method){
     */
 
    //#pragma omp parallel for  这个参数能实现多线程的操作
-   //所以这就取决于：我每个process要不要分给每个线程进行操作了————————即进行文件IO也是可以通过多线程对文件的内容进行拆分再handel的
+
+   //这里原本的代码逻辑是进行分块处理的执行的操作，但是现在执行的操作应该交给addtask做，所以这个应该在这里调用addtask操作
     for (size_t i = 0; i < file_size; i += chunk_size) {
         size_t handle_size = (file_size - i) > chunk_size ? chunk_size : (file_size - i);
         
+        在这里直接调用addtask的操作
+
+
         //processFrame(file_data + i, handle_size);
         /*
         file_data是首地址，然后+i是加偏移量
         这个process只需要通过bind和placeholders配合即可实现
         所以并不是放在这个调用的，而是放在addtask中和bind配合才能实现调用的
         */
+    }
+
+
+    //所有都处理完了就立刻关闭映射，避免对映射的继续控制
+    if (munmap(addr, file_size) == -1) {
+        perror("munmap failed");
+        LOG(ERROR,"解除映射出错");
+        return 1;
     }
     
 }   //end of if READ
@@ -158,6 +203,7 @@ int FileStream::handle_chunk(size_t chunk_size,int method){
 
         if(addr == MAP_FAILED){
         perror("mmap");
+        LOG(ERROR,"映射出错");
         return -1;
         }
 
@@ -166,28 +212,39 @@ int FileStream::handle_chunk(size_t chunk_size,int method){
         const char *file_data = (const char *)addr;   //除了void* 其他的内容想进行强转都需要通过static_cast来实现
    
         //#pragma omp parallel for  这个参数能实现多线程的操作
-        //所以这就取决于：我每个process要不要分给每个线程进行操作了————————即进行文件IO也是可以通过多线程对文件的内容进行拆分再handel的
+        
+        进行处理操作，所以可以直接在这进行addtask，不过要对这个process进行bind才能add成功了
         for (size_t i = 0; i < file_size; i += chunk_size) {
         size_t handle_size = (file_size - i) > chunk_size ? chunk_size : (file_size - i);
         
-        processFrame(file_data + i, handle_size);
-        //file_data是首地址，然后+i是加偏移量
+        //processFrame(file_data + i, handle_size);
+        /*
+        file_data是首地址，然后+i是加偏移量
+        所以现在就需要改偏移量的代码了
+        */
         }
-    }
 
 
-    
+
     /*
     解除映射
     解除映射是解除这个返回的addr指针，从而回收对这片映射空间的操作权限
-
     */ 
-    //一定要能熟练应用这些if中调用函数，然后顺便进行判断的操作。
-    //这种操作在文件IO中出现好多好多次了
+    /*
+    一定要能熟练应用这些if中调用函数，然后顺便进行判断的操作。
+    这种操作在文件IO中出现好多好多次了
+    */
     if (munmap(addr, file_size) == -1) {
         perror("munmap failed");
+        LOG(ERROR,"解除映射出错");
         return 1;
     }
+
+    }    //end of 写操作
+
+
+    
+    
 }   //end of func handle_chunk
 
 
