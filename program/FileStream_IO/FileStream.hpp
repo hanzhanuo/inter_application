@@ -12,6 +12,8 @@
 */
 
 #include "header.hpp"
+#include "ThreadPool.hpp"
+#include "logger_myversion.cpp"
 #include <string>
 #include <vector>
 #include <omp.h>
@@ -33,19 +35,24 @@ namespace ghz{
         bool file_open();
         void file_close();
         int handle_chunk(size_t chunk_size,int method);
-        ssize_t file_read(void* buf, size_t chunk_size);  //由于这个count刚好用不到，就设计为进行读取并处理的单位吧        
-        ssize_t file_write(const void* buf, size_t chunk_size);
-        bool file_remove();
+        //这里的chunk_size是每次处理的大小，method是读写操作
+        //所以这个函数既可以进行读操作，又可以进行写操作，是通用成员函数
+        
+        //进行每块的内容进行处理的操作
+        void processChunk(char* mapped_data, size_t start, size_t end, std::mutex& mtx); 
+        
 
         //在这里可以添加目录操作，减少对于文件的读写操作
         //比如可以根据日期进行目录的组织
 
         //进行文件的目录操作
-        bool file_create_directory(const string& dir);   //创建目录
-        bool file_remove_directory(const string& dir);   //删除目录
+        bool file_create_directory(const string& dir);   //创建目录        
         bool file_list_directory(const string& dir, vector<string>& files);  //列出目录中的所有文件
 
         //都是bool操作，所以最终应该都是需要进行错误判断的
+
+
+        
 
     private:
         const string& _file_path;

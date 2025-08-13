@@ -1,0 +1,2 @@
+2025-08-13 15:40:25.812 [INFO] : [test.cpp:7][main] User logged in
+2025-08-13 15:40:25.812 [ERROR] : [test.cpp:8][main] Database connection failed

@@ -4,7 +4,9 @@ namespace ghz{
 
     ConnPoll::ConnPoll(int connectNum,int queSize)
     : _connectNum(connectNum)
+    , _connects()
     , _queSize(queSize)
+    ,_commandque(_queSize)
     , _isExit(false)
     {
         _connects.reserve(_connectNum);
@@ -18,6 +20,9 @@ namespace ghz{
     }
 
     //让连接池中所有的链接开始工作
+    //向链接容器中存放链接，并且启动链接
+    //使用的方法是mysql类型的智能指针，调用的是链接函数
+    
     void ConnPoll::start()
     {
         for(auto & conn : _connects)
@@ -48,6 +53,8 @@ namespace ghz{
         if(command) {
             //执行任务
             command();
+
+            
             
           }
        }

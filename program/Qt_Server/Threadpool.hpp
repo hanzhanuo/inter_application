@@ -24,6 +24,8 @@ public:
     void stop();//停止线程池的运行
     //Task是一个函数对象，用右值引用来表示
     void addTask(Task && cb);
+
+    
     
 private:
     //不是接口，放在了私有的区域

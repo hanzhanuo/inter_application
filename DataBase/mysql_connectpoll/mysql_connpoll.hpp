@@ -1,3 +1,5 @@
+
+
 #ifndef __Connectpool_H__
 #define __Connectpool_H__
 
@@ -8,22 +10,27 @@
 */
 
 
-#include "mysql_cilen_teacher.hpp"
+#include "mysql_cilent_teacher.hpp"
 #include "CommandQueue.hpp"
+#include <functional>
 #include <vector>
 #include <memory>
 
 namespace ghz{
 
-using Connect=ghz::MySQLClient;
-
 using std::vector;
 using std::unique_ptr;
+using std::function;
+
+using Connect=function<void()>;  // 连接的类型定义
+
+
 
 class ConnPoll{
-    private:
-        vector<unique_ptr<Connect>>  _connects;
+    private:        
         int                         _connectNum;
+        vector<unique_ptr<MYSQL>>  _connects;  
+        //vector中存的不是智能指针。现在的逻辑应该是让一个个链接后返回的MYSQl类型的智能指针进入这个vector中
         int                         _queSize;
         CommandQueue                _commandque;
         bool                        _isExit;   //表示是否整个连接池都结束运行了
@@ -37,6 +44,17 @@ class ConnPoll{
 
     private:
         void doCommand();//每一个子连接都要做的事儿
+
+
+        /*
+        行为仍然有缺陷，需要的行为：
+        启动连接池
+        停止连接池
+        add指令，get指令，do指令
+
+        连接池还需要加锁
+        */
+        
 
         
 };

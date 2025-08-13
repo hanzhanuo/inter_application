@@ -17,6 +17,7 @@
 
 #define DEBUG_LOG(msg) \
     std::cout << "[" << __FILE__   ":" << __LINE__ << "][" << __func__ << "] "  << msg << std::endl
+    
 
 
 #define SIZE(a) (sizeof(a)/sizeof(a[0]))
