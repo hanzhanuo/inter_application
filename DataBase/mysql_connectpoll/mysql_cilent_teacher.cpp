@@ -29,16 +29,18 @@ MySQLClient::~MySQLClient()
 }
 
 
-bool MySQLClient::connect(const string & host,             
-             const string & user,
-             const string & passwd,
-             const string & db,
-            unsigned short port)
+bool MySQLClient::connect(const string &host,
+                unsigned short port,
+                const string &user,
+                const string &password,
+                const string &db)
+
+           
 {
     MYSQL * pconn = mysql_real_connect(&_conn,
                                        host.c_str(),
                                        user.c_str(),
-                                       passwd.c_str(),
+                                       password.c_str(),
                                        db.c_str(),
                                        port,
                                        nullptr,

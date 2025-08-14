@@ -15,11 +15,11 @@ public:
     MySQLClient();
     ~MySQLClient();
     
-    bool connect(const string & host,                 
-                 const string & user,
-                 const string & passwd,
-                 const string & db,
-                unsigned short port);
+    bool connect(const string &host,
+                unsigned short port,
+                const string &user,
+                const string &password,
+                const string &db);
     bool writeOperationQuery(const string & sql);
     vector<vector<string>> readOperationQuery(const string & sql);
 
