@@ -67,6 +67,9 @@ private:
     TcpConnecitonCallback       _onClose;
 
     vector<Functor>             _pendingFunctors;
+    //所以这个_pendingFunctors是用来存储现在都有什么任务需要处理的
+    //然后在doPendingFunctors中会依次执行这些任务
+
     MutexLock                   _mutex;
 };
 

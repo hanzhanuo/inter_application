@@ -1,9 +1,15 @@
 #include "mysql_connpoll.hpp"
 
+#include <iostream>
+
+
 namespace ghz{
 
+    using group_6::Condition;
+    using group_6::MutexLockGuard;
 
-    ConnPoll::ConnPoll(const string &host,
+
+    ConnPool::ConnPool(const string &host,
                 unsigned short port,
                 const string &user,
                 const string &password,
@@ -28,7 +34,7 @@ namespace ghz{
         }
     }
 
-    ConnPoll::~ConnPoll()
+    ConnPool::~ConnPool()
     {
         //析构函数用于关闭所有链接。首先进行上锁操作，否则可能导致正在执行任务就被关闭了
         MutexLockGuard autolock(_connMutex);
@@ -44,7 +50,7 @@ namespace ghz{
     }
 
 
-    bool ConnPoll::empty() const{
+    bool ConnPool::empty() const{
 
         //MutexLockGuard autolock(_connMutex);
         //const函数内部没法对任何内容进行改变，所以没法加锁？
@@ -52,22 +58,25 @@ namespace ghz{
 
         return _connects.empty();
     }
-    bool ConnPoll::full() const{
+    bool ConnPool::full() const{
 
         
         return _connects.size() == _connectNum;
     }
 
-    size_t ConnPoll::avaiable() const{
+    size_t ConnPool::avaiable() const{
 
-        
-        return _connectNum-_connects.size();
+        size_t cnt=_connectNum-_connects.size();
+
+        std::cout<<"可用链接数为"<<cnt<<std::endl;
+
+        return cnt;
     }
 
     
 
     
-     Conn_Elem ConnPoll::get_connect()
+     Conn_Elem ConnPool::get_connect()
     {
 
         Conn_Elem tmp;   //用于承接返回值的临时元素变量
@@ -89,11 +98,13 @@ namespace ghz{
         //对条件变量进行notify_one的操作中
         _notFull.notifyOne();
 
+        std::cout<<"已获取一个连接"<<std::endl;
+
         return tmp;
     }
 
     //归还某个链接的操作
-    void ConnPoll::release_connect(Conn_Elem elem)
+    void ConnPool::release_connect(Conn_Elem elem)
     {
 
         //先加锁再判断
@@ -109,6 +120,8 @@ namespace ghz{
 
         //对条件变量进行notify_one的操作中
         _notEmpty.notifyOne();
+
+        std::cout<<"已归还一个连接"<<std::endl;
     }
 
    

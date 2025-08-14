@@ -16,8 +16,8 @@ int main(int argc,char** argv){
 
     MYSQL conn;
 
-    ghz::MySQLClient mysqlClient;
-    mysqlClient.connect(host, user, passwd, db,port);
+    // ghz::MySQLClient mysqlClient;
+    // mysqlClient.connect(host, user, passwd, db,port);
     
 
 

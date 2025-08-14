@@ -11,7 +11,6 @@
 
 
 #include "mysql_cilent_teacher.hpp"
-#include "CommandQueue.hpp"
 #include "MutexLock.hpp"
 #include "Condition.hpp"
 #include <functional>
@@ -32,11 +31,11 @@ using Connect=function<void()>;  // 连接的类型定义
 using Conn_Elem=std::shared_ptr<MySQLClient>;   // 连接元素的类型定义
 
 
-class ConnPoll{
+class ConnPool{
     
     public:
 
-        ConnPoll(const string &host,
+        ConnPool(const string &host,
                 unsigned short port,
                 const string &user,
                 const string &password,
@@ -48,11 +47,11 @@ class ConnPoll{
 
 
 
-        ~ConnPoll();  //析构函数用于关闭所有链接
+        ~ConnPool();  //析构函数用于关闭所有链接
 
         // 禁止拷贝构造和赋值，防止多份连接池实例
-        ConnPoll(const ConnPoll&) = delete;
-        ConnPoll& operator=(const ConnPoll&) = delete;
+        ConnPool(const ConnPool&) = delete;
+        ConnPool& operator=(const ConnPool&) = delete;
 
         //判空判满，还有获取当前有多少个可用连接
         //这个获取还有多少个可用连接，在对线程池和消息队列中似乎也可以使用

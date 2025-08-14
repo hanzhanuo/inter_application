@@ -39,10 +39,10 @@ bool MySQLClient::connect(const string &host,
 {
     MYSQL * pconn = mysql_real_connect(&_conn,
                                        host.c_str(),
-                                       port,
                                        user.c_str(),
-                                       passwd.c_str(),
+                                       password.c_str(),
                                        db.c_str(),
+                                       port,
                                        nullptr,
                                        0);
     if(!pconn) {
