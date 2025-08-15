@@ -11,9 +11,20 @@
 这里的文件主要就是录像文件
 */
 
+
+
+/*
+当前最新需求：先求出文件大小，再求出线程数，从而就能计算出分块的大小
+然后再进行从内存映射的起始位置开始，然后进行for循环的具体分配进行处理的内存区域。从而获取start和end两个数据位置
+然后再在process函数中通过bind传入这两个参数
+
+*/
+
 #include "header.hpp"
 #include "ThreadPool.hpp"
-#include "logger_myversion.cpp"
+#include "Condition.hpp"
+#include "MutexLock.hpp"
+#include "logger_myversion.hpp"
 #include <string>
 #include <vector>
 #include <omp.h>
@@ -26,6 +37,10 @@ enum{
 namespace ghz{
     using std::string;
     using std::vector;
+
+    using group_6::Condition;
+    using group_6::MutexLock;
+    using group_6::MutexLockGuard;
 
     class FileStream {
     public:
@@ -51,13 +66,18 @@ namespace ghz{
 
         //都是bool操作，所以最终应该都是需要进行错误判断的
 
+       
+        //启动内存映像和结束内存映像的两个函数
+        void* start_mmap(int method);
+        void release_mmap(void* &addr, size_t size);
+
 
         
 
     private:
         const string& _file_path;
         int _file_fd;
-        size_t file_size;
+        size_t _file_size;
 
         //进一步优化看看读写操作有没有必要进行数据成员的增加？
     };

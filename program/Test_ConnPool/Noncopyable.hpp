@@ -3,6 +3,11 @@
 
 namespace group_6{
 
+  enum{
+    READ=1,
+    WRITE
+};
+
 class Noncopyable{
   private:
     Noncopyable(const Noncopyable& )=delete;

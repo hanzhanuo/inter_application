@@ -1,12 +1,17 @@
 #include "FileStream.hpp"
 
+#include <functional>
+
 
 
 /*
 需求是保存和读取录像文件
 这就需要进行文件打开，关闭，删除，存储
 处理文件操作中的错误情况，并提供相应的错误信息
-````
+
+
+当前需求：能通过线程池获取现在有多少线程处于处理任务的状态
+就无脑拆分为线程数量即可。所以需要线程池中获取线程数量的函数
 */
 
 //现在这个类的需求是必须既能实现对于本地磁盘的读写操作，又能实现对于服务器端的文件读写操作了
@@ -126,7 +131,58 @@ void FileStream::processWriteVideo(char* mapped_data, size_t start, size_t end, 
 
 
 
+//尝试把内存映射函数给拆出来
 
+void* FileStream::start_mmap(int method){
+    _file_size=lseek(_file_fd, 0, SEEK_END);
+    if(_file_size == -1){
+        perror("lseek");
+        return nullptr;
+    }
+
+    void* addr=nullptr;
+
+
+    if(method==READ){     //进行读操作
+
+        //文件映射成功
+        addr=mmap(nullptr,_file_size,PROT_READ,MAP_PRIVATE,_file_fd,0);
+
+        if(addr == MAP_FAILED){
+        perror("mmap");  //也是类似于日志输出，不过这个日志是特定输出到stderr文件中的
+        LOG(ERROR,"映射出错");
+        return nullptr;
+        }
+    }
+
+
+    if(method==WRITE){
+        //进行写操作
+
+        void* addr=mmap(nullptr,_file_size,PROT_READ|PROT_WRITE,MAP_SHARED,_file_fd,0);
+
+        if(addr == MAP_FAILED){
+        perror("mmap");
+        LOG(ERROR,"映射出错");
+        return nullptr;
+        }
+    }    
+
+} //end of start_mmap
+
+
+
+void release_mmap(void* &addr, size_t size){   //这个void*作为传入传出参数使用
+    if (munmap(addr, size) == -1) {
+        perror("munmap failed");
+        LOG(ERROR,"解除映射出错");
+        exit(EXIT_FAILURE);
+    }
+}   //end of release_mmap
+
+
+
+//-------------------------start of handle_chunk-------------------------
 
 //这里如果设置为萝卜坑，那所有调用这个函数的都需要设置一个萝卜坑参数了
 int FileStream::handle_chunk(size_t chunk_size,int method){
@@ -134,26 +190,14 @@ int FileStream::handle_chunk(size_t chunk_size,int method){
     //这里返回的file_data是映射到内存中的首地址
 
 
-    file_size=lseek(_file_fd, 0, SEEK_END);
-    if(file_size == -1){
-        perror("lseek");
-        return -1;
-    }
-
-    void* addr=nullptr;
-
     
-    if(method==READ){
-        //进行读操作
-
-        //文件映射成功
-    void* addr=mmap(nullptr,file_size,PROT_READ,MAP_PRIVATE,_file_fd,0);
-
-    if(addr == MAP_FAILED){
-        perror("mmap");  //也是类似于日志输出，不过这个日志是特定输出到stderr文件中的
-        LOG(ERROR,"映射出错");
-        return -1;
-    }
+    void* addr=start_mmap(READ);
+    //这只是其中一种举例，然后根据这里的枚举值的不同，里面的进行addtask的process函数也不同
+    //所以这里还需要对这个函数进行大量修改，看看能不能进一步解耦，对于这个分块函数也直接解耦了
+    //毕竟这里的不同的枚举值是调用不同的函数，所以这里应该再解耦出两个函数(即把这部分内容解耦成四部分函数调用)
+    然后这里TODO解耦成的函数就是进行分块和addtask的操作的函数
+    
+    
 
     //下面这个是每次处理16个字节的操作，但是可以和进行帧操作进行类比：从而实现每次进行一个数据帧的读取操作
     //所以为了能读取各种各样的大小的内容，我觉得可以把这个操作封装成一个成员函数
@@ -174,8 +218,15 @@ int FileStream::handle_chunk(size_t chunk_size,int method){
    //这里原本的代码逻辑是进行分块处理的执行的操作，但是现在执行的操作应该交给addtask做，所以这个应该在这里调用addtask操作
     for (size_t i = 0; i < file_size; i += chunk_size) {
         size_t handle_size = (file_size - i) > chunk_size ? chunk_size : (file_size - i);
-        
-        在这里直接调用addtask的操作
+
+        // 在这里直接调用addtask的操作
+        addtask(std::bind(&FileStream::processReadVideo, this, file_data + i, handle_size, std::ref(mtx)));
+
+
+        /*
+        这个函数极其极其重要，既写了process中需要如何进行操作，又写了对于process的bind
+        那么我应该是对于连接池的process也进行封装的，封装为该process直接传入是读操作还是写操作，然后传入具体的命令行是什么
+        */
 
 
         //processFrame(file_data + i, handle_size);
@@ -213,15 +264,14 @@ int FileStream::handle_chunk(size_t chunk_size,int method){
    
         //#pragma omp parallel for  这个参数能实现多线程的操作
         
-        进行处理操作，所以可以直接在这进行addtask，不过要对这个process进行bind才能add成功了
+        //进行处理操作，所以可以直接在这进行addtask，不过要对这个process进行bind才能add成功了
         for (size_t i = 0; i < file_size; i += chunk_size) {
         size_t handle_size = (file_size - i) > chunk_size ? chunk_size : (file_size - i);
+
+
+        addtask(std::bind(&FileStream::processWriteVideo, this, file_data + i, handle_size, std::ref(mtx)));
         
-        //processFrame(file_data + i, handle_size);
-        /*
-        file_data是首地址，然后+i是加偏移量
-        所以现在就需要改偏移量的代码了
-        */
+        
         }
 
 
@@ -245,7 +295,8 @@ int FileStream::handle_chunk(size_t chunk_size,int method){
 
     
     
-}   //end of func handle_chunk
+}   
+//--------------------------end of func handle_chunk-------------------------
 
 
 

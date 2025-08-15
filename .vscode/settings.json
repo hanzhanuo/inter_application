@@ -127,7 +127,8 @@
     "netfwd": "cpp",
     "mutex": "cpp",
     "strstream": "cpp",
-    "cinttypes": "cpp"
+    "cinttypes": "cpp",
+    "avutil.h": "c"
   },
   "C_Cpp.errorSquiggles": "disabled"
 }

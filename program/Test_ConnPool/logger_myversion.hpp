@@ -1,0 +1,90 @@
+#ifndef __Logger_H__
+#define __Logger_H__
+
+#include <iostream>
+#include <log4cpp/Category.hh>
+#include <log4cpp/FileAppender.hh>
+#include <log4cpp/OstreamAppender.hh>
+#include <log4cpp/BasicLayout.hh>
+#include <log4cpp/Priority.hh>
+#include <log4cpp/PatternLayout.hh>
+#include <string>
+#include <mutex>
+#include <sys/stat.h>  // 用于创建目录
+#include <sys/types.h>
+
+
+
+// 定义日志宏
+    #define LOG(priority, message) \
+    log4cpp::Category::getRoot() << log4cpp::Priority::priority \
+    << "[" << __FILE__ << ":" << __LINE__ << "][" << __FUNCTION__ << "] " << message
+
+class MyLogger {
+public:
+    // 获取单例实例
+    static MyLogger& getInstance() {
+        static std::mutex mutex;
+        std::lock_guard<std::mutex> guard(mutex);
+        static MyLogger instance;
+        return instance;
+    }
+
+    // 记录警告日志
+    void warn(const std::string& msg) {
+        category.warn(msg);
+    }
+
+    // 记录错误日志
+    void error(const std::string& msg) {
+        category.error(msg);
+    }
+
+    // 记录信息日志（常规操作记录）
+    void info(const std::string& msg) {
+        category.info(msg);
+    }
+
+private:
+
+    // 私有构造函数，初始化日志配置
+    MyLogger() : category(log4cpp::Category::getRoot()) { // 在初始化列表中初始化引用成员
+        // 确保上级目录的log文件夹存在
+        createLogDirectory("../log");
+
+        // 创建PatternLayout以获得更详细的日志格式
+        log4cpp::PatternLayout* fileLayout = new log4cpp::PatternLayout();
+        fileLayout->setConversionPattern("%d{%Y-%m-%d %H:%M:%S.%l} [%p] %c: %m%n");
+
+        log4cpp::PatternLayout* consoleLayout = new log4cpp::PatternLayout();
+        consoleLayout->setConversionPattern("%d{%H:%M:%S.%l} [%p] %m%n"); // 简化的屏幕格式
+
+        // 创建文件Appender，日志文件路径设为../log/server.log
+        log4cpp::Appender* fileAppender = new log4cpp::FileAppender("fileAppender", "app.log");
+        fileAppender->setLayout(fileLayout);
+
+        log4cpp::Appender* consoleAppender = new log4cpp::OstreamAppender("consoleAppender", &std::cout);
+        consoleAppender->setLayout(consoleLayout);
+
+        // 配置日志分类
+        log4cpp::Category& root = log4cpp::Category::getRoot();
+        root.setPriority(log4cpp::Priority::DEBUG); // 设置日志级别
+        root.addAppender(fileAppender);
+        root.addAppender(consoleAppender);
+    }
+
+    // 私有拷贝构造函数和赋值运算符，防止复制
+    MyLogger(const MyLogger&) = delete;
+    MyLogger& operator=(const MyLogger&) = delete;
+
+    // 创建日志目录（如果不存在）
+    void createLogDirectory(const std::string& path) {
+            mkdir(path.c_str(), 0755);
+    }
+
+    // log4cpp日志分类对象
+    log4cpp::Category& category;
+};
+
+#endif
+

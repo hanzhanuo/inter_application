@@ -1,3 +1,6 @@
+#ifndef __Logger_H__
+#define __Logger_H__
+
 #include <iostream>
 #include <log4cpp/Category.hh>
 #include <log4cpp/FileAppender.hh>
@@ -82,4 +85,6 @@ private:
     // log4cpp日志分类对象
     log4cpp::Category& category;
 };
+
+#endif
 
