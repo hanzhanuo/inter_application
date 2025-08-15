@@ -50,6 +50,15 @@ int testAVIO2()
     int size = 1024;
     unsigned char * pBuff = (unsigned char *)malloc(size);
 
+
+    /*
+    下面这个函数是通过传入回调函数作为参数，从而实现自定义读写和查找的方法
+    所以才会有上面的这两个预先写好的func，等待作为回调函数进行传入
+
+    所以这个是作为传入读写方式的初始化函数来实现的
+    所以从内存缓冲区中进行接收，和从文件中读取，两者的区别我认为就是这个read_packet的里面的方法不同决定了读写方法的不同
+    */
+
     AVIOContext * pIOCtx = avio_alloc_context(
                 pBuff,
                 size,
@@ -61,6 +70,8 @@ int testAVIO2()
     printf("avio_alloc_context end\n");
 
     AVFormatContext * pFmtCtx = avformat_alloc_context();
+    //对大管家进行初始化
+
     if(pFmtCtx == nullptr) {
         printf("avformat_alloc_context error\n");
         return EXIT_FAILURE;
