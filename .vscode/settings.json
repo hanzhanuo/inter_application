@@ -128,7 +128,8 @@
     "mutex": "cpp",
     "strstream": "cpp",
     "cinttypes": "cpp",
-    "avutil.h": "c"
+    "avutil.h": "c",
+    "cjson.h": "c"
   },
   "C_Cpp.errorSquiggles": "disabled"
 }
