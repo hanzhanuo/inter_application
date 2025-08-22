@@ -42,6 +42,7 @@ void Analy_cjson_str(string str){
     cJSON *code = cJSON_GetObjectItemCaseSensitive(root, "code");
     cJSON *msg = cJSON_GetObjectItemCaseSensitive(root, "msg");
     
+    //这上下几行代码是最重要需要处理的
 
     //对上面获取的value数据进行打印的操作。所以这个其实是否封装进函数，对这个value的接收和处理效果完全没有影响
     if (cJSON_IsNumber(code)) {
@@ -74,7 +75,8 @@ int main() {
         std::string response_data;
 
         // 设置请求URL
-        curl_easy_setopt(curl, CURLOPT_URL, "http://192.168.5.222/xsw/api/ptz/control?speed=69&stop=1&t=1755482139&token=fa9e44399cf95ea134ed396e462aeabf&value=u");
+        curl_easy_setopt(curl, CURLOPT_URL, "www.baidu.com");
+        //http://192.168.5.222/xsw/api/ptz/control?speed=69&stop=1&t=1755482139&token=fa9e44399cf95ea134ed396e462aeabf&value=u
 
         // 设置数据接收回调
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
