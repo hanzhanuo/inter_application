@@ -5,11 +5,12 @@
  * 主要流程如下：
  * 1. 打开输入媒体文件，获取媒体流信息。
  * 2. 分别查找视频流和音频流，打开对应的解码器。
- * 3. 为视频帧分配输出缓冲区，为音频帧分配输出文件。
- * 4. 循环读取每一个packet，根据其类型送入对应解码器。
+ * 3. 为视频帧分配输出缓冲区，为音频帧分配输出文件。    // 这里是为视频帧分配YUV格式的缓冲区，为音频帧分配PCM格式的文件
+ *
+ * 4. 循环读取每一个packet，根据其类型送入对应解码器。  //也就是说到时候会有视频流和音频流不同的packet发过来是吗
  * 5. 解码后的视频帧写入YUV文件，音频帧写入PCM文件。
- * 6. 解码结束后，输出ffplay命令用于播放结果文件。
- * 7. 释放所有资源。
+ * 
+ * 6. 解码结束后，输出ffplay命令用于播放结果文件。    //所以上面都是在进行解码操作，直到到了这才是进行播放操作
  */
 
 
@@ -55,12 +56,16 @@ static int openCodecContext(int *stream_idx,
                               AVCodecContext **dec_ctx,
                               AVFormatContext *fmt_ctx,
                               enum AVMediaType type);
+
 // 解码一个packet（音频或视频），并输出到文件
 static int decodePacket(AVCodecContext *dec, const AVPacket *pkt);
+
 // 输出一帧视频到YUV文件
 static int outputVideoFrame(AVFrame *frame);
+
 // 输出一帧音频到PCM文件
 static int outputAudioFrame(AVFrame *frame);
+
 // 根据音频采样格式获取ffplay命令行参数格式字符串
 static int get_format_from_sample_fmt(const char **fmt,
                                       enum AVSampleFormat sample_fmt);
@@ -156,6 +161,8 @@ int main()
     // 主循环：不断读取packet，送入对应解码器
     while(av_read_frame(inFmtCtx, pkt) >= 0) {
         printf("count: %d\n", ++count);
+
+        //所以这里的数组下标是对于packet进行的类型辨别，然后再进行对应的解码方法
         if(pkt->stream_index == videoStreamIdx)
             ret = decodePacket(videoCodecCtx, pkt); // 解码视频packet
         else if(pkt->stream_index == audioStreamIdx)
@@ -173,6 +180,9 @@ int main()
     {    decodePacket(audioCodecCtx, nullptr);  }
 
     printf("====== Demuxing succeeded. ======\n");
+
+
+    //下面这里的视频流和音频流是AVStream，然后是从AVStream结构体中获取出来的(所以是取的该结构体的数组下标)
 
     // 输出播放YUV文件的ffplay命令，便于用户直接播放解码后的视频
     if(videoStream) {
@@ -284,6 +294,14 @@ static int openCodecContext(int *stream_idx,
 
     return 0;
 }
+
+
+//end of 打开解码器函数
+
+
+
+
+
 
 /*
  * 解码一个packet（音频或视频），并输出到文件

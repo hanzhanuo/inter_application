@@ -13,7 +13,7 @@
 #include <iostream>
 #include <stdexcept>
 
-#include "logger_myversion.cpp"
+#include "logger_myversion.hpp"
 
 
 #define DEBUG_LOG(msg) \

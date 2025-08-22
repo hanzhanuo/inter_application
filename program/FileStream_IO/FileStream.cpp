@@ -132,7 +132,8 @@ void FileStream::processWriteVideo(char* mapped_data, size_t start, size_t end, 
 
 
 //尝试把内存映射函数给拆出来
-
+//这个函数的操作就是进行文件映射的操作
+//但是现在单纯进行文件映射的操作，不能实现文件转发的操作
 void* FileStream::start_mmap(int method){
     _file_size=lseek(_file_fd, 0, SEEK_END);
     if(_file_size == -1){
@@ -159,7 +160,8 @@ void* FileStream::start_mmap(int method){
     if(method==WRITE){
         //进行写操作
 
-        void* addr=mmap(nullptr,_file_size,PROT_READ|PROT_WRITE,MAP_SHARED,_file_fd,0);
+        //文件映射成功
+        addr=mmap(nullptr,_file_size,PROT_READ|PROT_WRITE,MAP_SHARED,_file_fd,0);
 
         if(addr == MAP_FAILED){
         perror("mmap");
@@ -185,6 +187,9 @@ void release_mmap(void* &addr, size_t size){   //这个void*作为传入传出�
 //-------------------------start of handle_chunk-------------------------
 
 //这里如果设置为萝卜坑，那所有调用这个函数的都需要设置一个萝卜坑参数了
+
+//我原本想要实现的是进行无论是读还是写操作都在这个函数中实现
+
 int FileStream::handle_chunk(size_t chunk_size,int method){
     // 直接读取内存中的数据
     //这里返回的file_data是映射到内存中的首地址

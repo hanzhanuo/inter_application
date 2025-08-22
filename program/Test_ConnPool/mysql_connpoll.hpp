@@ -34,6 +34,7 @@ using Conn_Elem=std::shared_ptr<MySQLClient>;   // 连接元素的类型定义
 class ConnPool{
     
     public:
+    //对于构造函数和析构函数都必须设置为私有的，然后通过getInstance的方式，实现创建这个单例对象
 
         ConnPool(const string &host,
                 unsigned short port,
@@ -53,6 +54,12 @@ class ConnPool{
         ConnPool(const ConnPool&) = delete;
         ConnPool& operator=(const ConnPool&) = delete;
 
+
+     
+
+     //通过这个static类型的getter类型的成员函数，来构建单例的当前类的对象
+
+        
         //判空判满，还有获取当前有多少个可用连接
         //这个获取还有多少个可用连接，在对线程池和消息队列中似乎也可以使用
         bool empty() const;

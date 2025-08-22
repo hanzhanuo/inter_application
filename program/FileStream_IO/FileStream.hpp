@@ -52,6 +52,8 @@ namespace ghz{
         int handle_chunk(size_t chunk_size,int method);
         //这里的chunk_size是每次处理的大小，method是读写操作
         //所以这个函数既可以进行读操作，又可以进行写操作，是通用成员函数
+
+        //现在需要做的：只有读数据的操作了，再看下去甚至都不需要专门写一个类了，因为只需要进行mmap映射就可以了
         
         //进行每块的内容进行处理的操作
         void processReadVideo(char* mapped_data, size_t start, size_t end, std::mutex& mtx);

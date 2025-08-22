@@ -7,6 +7,12 @@ extern "C"
 #include <libavutil/file.h>
 }
 
+
+/*
+这段代码的操作是将一个文件映射到内存中，并使用 FFmpeg 的 AVIOContext 读取该内存中的数据。
+所以这里进行的对于FLV文件进行映射到文件中然后进行内存中的数据读取操作
+*/
+
 struct buffer_data {
     uint8_t *ptr;
     size_t size; ///< size left in the buffer

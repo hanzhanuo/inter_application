@@ -75,9 +75,8 @@ int main() {
         std::string response_data;
 
         // 设置请求URL
-        curl_easy_setopt(curl, CURLOPT_URL, "www.baidu.com");
-        //http://192.168.5.222/xsw/api/ptz/control?speed=69&stop=1&t=1755482139&token=fa9e44399cf95ea134ed396e462aeabf&value=u
-
+        curl_easy_setopt(curl, CURLOPT_URL, "http://192.168.5.222/xsw/api/ptz/control?speed=69&t=1755510009&token=498e8ef833fa8da57ef4e1f2d4439ff4&value=u");
+       
         // 设置数据接收回调
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_data);

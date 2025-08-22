@@ -20,37 +20,39 @@ MutexLock Command_Mutex;   //切记是MutexLock，而不是MutexLockGuard
 //addtask可以说是对于process函数的调用，然后这里是对于process的定义。所以在调用的时候，在什么位置调用都可以，前面加类名就可以了
 //所以这就是每个addtask和process的直接区别
 
-void mysql_process(int command_type,const string& command){
+// void mysql_process(int command_type,const string& command){
 
-    //连接池的初始化不需要进行在process中进行，然后这里只需要进行判断并取出操作即可
-    ghz::Conn_Elem tmp=connPool.get_connect();
+    
 
-    if(!tmp){
-        //获取连接失败
-        return;
-    }
+//     //连接池的初始化不需要进行在process中进行，然后这里只需要进行判断并取出操作即可
+//     ghz::Conn_Elem tmp=connPool.get_connect();
 
-    //根据命令类型进行不同的操作
-    switch(command_type){
-        case group_6::READ:  //读操作
-            {
-                MutexLockGuard autolock(Command_Mutex);
-                tmp->readOperation(command);
-            }
-            break;
-        case group_6::WRITE:  //写操作
-            {
-                MutexLockGuard autolock(Command_Mutex);
-                tmp->writeOperation(command);
-            }
-            break;
-        default:
-            break;
-    }
+//     if(!tmp){
+//         //获取连接失败
+//         return;
+//     }
 
-    connPool.release_connect(tmp);
+//     //根据命令类型进行不同的操作
+//     switch(command_type){
+//         case group_6::READ:  //读操作
+//             {
+//                 MutexLockGuard autolock(Command_Mutex);
+//                 tmp->readOperation(command);
+//             }
+//             break;
+//         case group_6::WRITE:  //写操作
+//             {
+//                 MutexLockGuard autolock(Command_Mutex);
+//                 tmp->writeOperation(command);
+//             }
+//             break;
+//         default:
+//             break;
+//     }
 
-}
+//     connPool.release_connect(tmp);
+
+// }
 
 
 

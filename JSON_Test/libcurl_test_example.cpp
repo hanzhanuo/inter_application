@@ -19,6 +19,7 @@ libcurl开发框架的处理方法：
 
 
 //设置回调函数来处理响应数据
+//所以对于存回来的ts文件，应该在这个回调函数内部实现对文件的解析操作，解析完之后将录像文件存储到本地的操作
 size_t write_callback(void *contents, size_t size, size_t nmemb, void *userp) { 
     
     /*
